@@ -8,7 +8,7 @@
  *   npm run sim -- --hz 60
  */
 import dgram from 'node:dgram';
-import { PACKET_SIZE, createPacketBuffer, writeTelemetry } from '../../shared/protocol.js';
+import { PACKET_SIZE, createPacket, writeTelemetry } from '../../shared/protocol.js';
 import { Scenario } from './scenario.js';
 
 function parseArgs(argv) {
@@ -48,7 +48,7 @@ socket.on('error', (err) => {
   process.exit(1);
 });
 
-const buf = createPacketBuffer();
+const packet = createPacket();
 const scenario = new Scenario();
 const dt = 1 / opts.hz;
 
@@ -92,8 +92,8 @@ function sendPacket() {
   scenario.sample(state);
   state.timestampUs = Math.round((performance.timeOrigin + performance.now()) * 1000); // wall-clock µs
   state.sequence = (state.sequence + 1) >>> 0;
-  writeTelemetry(buf, state);
-  socket.send(buf, opts.port, opts.host);
+  writeTelemetry(packet.view, state);
+  socket.send(packet.bytes, opts.port, opts.host);
   sentTotal++;
   statSent++;
 }

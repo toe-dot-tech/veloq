@@ -7,7 +7,12 @@
  *   node sim/test/receive.js [--port 9999] [--seconds 8]
  */
 import dgram from 'node:dgram';
-import { PACKET_SIZE, isValidPacket, readTelemetry } from '../../shared/protocol.js';
+import {
+  PACKET_SIZE,
+  dataViewOf,
+  isValidPacket,
+  readTelemetry,
+} from '../../shared/protocol.js';
 
 function parseArgs(argv) {
   const opts = { port: 9999, seconds: 8 };
@@ -65,7 +70,8 @@ socket.on('error', (err) => {
 });
 
 socket.on('message', (msg) => {
-  if (!isValidPacket(msg)) {
+  const view = dataViewOf(msg);
+  if (!isValidPacket(view)) {
     invalid++;
     return;
   }
@@ -73,7 +79,7 @@ socket.on('message', (msg) => {
 
   const now = process.hrtime.bigint();
   if (statsStart === null) statsStart = now;
-  readTelemetry(msg, decoded);
+  readTelemetry(view, 0, decoded);
 
   if (lastSeq !== null) {
     const expected = (lastSeq + 1) >>> 0;

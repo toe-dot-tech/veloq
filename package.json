@@ -4,10 +4,12 @@
   "type": "module",
   "workspaces": [
     "shared",
-    "sim"
+    "sim",
+    "bridge"
   ],
   "scripts": {
     "sim": "node sim/src/index.js",
-    "sim:recv": "node sim/test/receive.js"
+    "sim:recv": "node sim/test/receive.js",
+    "bridge": "node bridge/src/index.js"
   }
 }
