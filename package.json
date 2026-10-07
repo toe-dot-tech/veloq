@@ -1,0 +1,13 @@
+{
+  "name": "veloq",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "sim"
+  ],
+  "scripts": {
+    "sim": "node sim/src/index.js",
+    "sim:recv": "node sim/test/receive.js"
+  }
+}
