@@ -70,12 +70,32 @@ npm run sim -- --host 0.0.0.0 --port 9999
 npm run sim -- --seconds 30       # auto-stop (benchmark runs)
 ```
 
+### Web HUD
+
+```bash
+# terminal 1 — telemetry
+npm run sim
+
+# terminal 2 — UDP→WebSocket bridge + static server (COOP/COEP headers)
+npm run bridge
+
+# then open http://localhost:8080   (or the printed LAN URL on a phone/tablet)
+```
+
+The HUD overlay reports live FPS, telemetry rate, end-to-end latency and
+tuning-isolation status. Verified baseline on this machine: 120.0 Hz ingest,
+~6 ms telemetry-to-glass, 0 invalid packets.
+
+> Browsers cannot open raw UDP sockets, so the web target receives the same
+> 96-byte datagrams through the local bridge. The bridge drops frames under
+> backpressure instead of queueing — stale data is worse than no data.
+
 ## Phases
 
 | Phase | Deliverable                                      | Status |
 | ----- | ------------------------------------------------ | ------ |
 | 0     | Repo skeleton + protocol spec                    | ✅     |
 | 1     | UDP simulator @ 120 Hz + sanity receiver         | ✅     |
-| 2     | Web: bridge, Worker, SharedArrayBuffer, gauges   | ⬜     |
+| 2     | Web: bridge, Worker, SharedArrayBuffer, gauges   | ✅     |
 | 3     | Android: C++ NDK UDP → shared memory → SurfaceView | ⬜   |
 | 4     | Benchmark harness (latency, GC pauses, FPS, memory) | ⬜ |

@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>gauge test</title>
+</head>
+<body style="margin:0">
+  <canvas id="c" width="1600" height="900" style="width:1600px;height:900px;display:block;-webkit-font-smoothing:antialiased"></canvas>
+  <pre id="map" style="font:11px/11px monospace;margin:0"></pre>
+  <script type="module">
+    import { createRenderer } from '/src/render.js';
+    // let the backdrop photo finish loading before probing (the test draws
+    // synchronously, so without this the probe beats the async image fetch)
+    await new Promise((res) => {
+      const img = new Image();
+      img.onload = img.onerror = res;
+      img.src = 'veloq_bg7.jpg';
+    });
+    const canvas = document.getElementById('c');
+    const r = createRenderer(canvas);
+    r.resize();
+    const state = {
+      rpm: 7800, rpmMax: 10000, speedKph: 236, gear: 4,
+      steer: -0.35, throttle: 0.85, brake: 0.25,
+      fuelL: 43, lapDistancePct: 0.62, lapNumber: 3, lapTimeMs: 92134, position: 2,
+      tireTemp: [88, 92, 86, 90],
+      flags: [{ type: 'yellow', text: 'LAP 3' }, { type: 'none', text: '' }],
+      suspension: [12, 8, -6, -4],
+      driver: 'T. KOWALSKI', carClass: 'GT3', carStatus: 'NOMINAL',
+      lastLapMs: 92340, fastestLapMs: 91580,
+      comms: [
+        { who: 'PIT', text: 'box box — confirm in 3' },
+        { who: 'DRV', text: 'copy, boxing this lap' },
+      ],
+    };
+    for (let i = 0; i < 30; i++) r.draw(state, { gen: 1 });
+    // let the steering-wheel + logo SVGs finish loading, then redraw once so
+    // the wheel/logo probes measure the baked render, not the pre-load fallback
+    await new Promise((res) => {
+      const im = new Image();
+      im.onload = im.onerror = res;
+      im.src = 'steering.svg';
+    });
+    await new Promise((res) => {
+      const im = new Image();
+      im.onload = im.onerror = res;
+      im.src = 'logo.svg';
+    });
+    r.draw(state, { gen: 2 });
+    const ctx = canvas.getContext('2d');
+    const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const W = canvas.width, H = canvas.height;
+    const at = (x, y) => {
+      const i = (y * W + x) * 4;
+      return [d[i], d[i + 1], d[i + 2]];
+    };
+    // probes are written in 1600×900 design coords; scale to the backing store
+    const S = W / 1600;
+    const px = (x, y) => {
+      const xx = Math.round(x * S), yy = Math.round(y * S);
+      const dd = ctx.getImageData(xx, yy, 1, 1).data;
+      return dd[0] + ',' + dd[1] + ',' + dd[2];
+    };
+      const cls = (p) => {
+      const [R, G, B] = p;
+      if (Math.abs(R - 254) < 5 && Math.abs(G - 250) < 5 && Math.abs(B - 224) < 5) return '.';
+      if (Math.abs(R - 77) < 20 && Math.abs(G - 124) < 20 && Math.abs(B - 47) < 20) return 'G';
+      if (Math.abs(R - 40) < 20 && Math.abs(G - 54) < 20 && Math.abs(B - 24) < 20) return 'O';
+      if (R > 150 && G < 95 && B < 90) return 'R';
+      if (R > 150 && G > 130 && B < 115) return 'Y';
+      if (R < 180 && G < 180 && B < 180) return 'd';
+      return 'x';
+    };
+    let map = '';
+    const step = Math.max(2, Math.round(W / 80));
+    for (let y = 0; y < H; y += step) {
+      for (let x = 0; x < W; x += step) map += cls(at(x, y));
+      map += '\n';
+    }
+    document.getElementById('map').textContent = map;
+    const head = document.createElement('pre');
+    head.id = 'probe';
+    const probes = [
+      ['margin@(10,10)', 10, 10],
+      ['logoHeadL@(776,78)', 776, 78],
+      ['logoHeadR@(822,78)', 822, 78],
+      ['logoEye@(800,89)', 800, 89],
+      ['arcTop@(800,241)', 800, 241],
+      ['commsHead@(160,197)', 160, 197],
+      ['commsPit@(127,230)', 127, 230],
+      ['commsDrv@(300,258)', 300, 258],
+      ['commsGap@(127,300)', 127, 300],
+      ['lapsIcon@(103,474)', 103, 474],
+      ['lapsLab@(100,500)', 100, 500],
+      ['lapsVal@(280,500)', 280, 500],
+      ['lapsGap@(280,553)', 280, 553],
+      ['profName@(173,800)', 173, 800],
+      ['pillInfo@(173,825)', 173, 825],
+      ['shift0@(1186,119)', 1186, 119],
+      ['shift13@(1504,79)', 1504, 79],
+      ['shiftMid@(1186,99)', 1186, 99],
+      ['shiftTop@(1186,79)', 1186, 79],
+      ['simKnob@(416,792)', 416, 792],
+      ['knobRingL@(403,810)', 403, 810],
+      ['knobRingR@(429,810)', 429, 810],
+      ['knobRingT@(416,797)', 416, 797],
+      ['knobRingB@(416,823)', 416, 823],
+      ['THR@(550,770)', 550, 770],
+      ['BRK@(520,802)', 520, 802],
+      ['tireValFL@(1379,777)', 1379, 777],
+      ['tireBarFL@(1352,790)', 1352, 790],
+      ['suspTrack@(1353,672)', 1353, 672],
+      ['suspVal@(1353,699)', 1353, 699],
+      ['wheel@(1383,293)', 1383, 293],
+      ['wheelRim@(1383,235)', 1383, 235],
+      ['footerFlag@(100,94)', 100, 94],
+      ['footerLap@(160,94)', 160, 94],
+      ['footerRow2@(150,123)', 150, 123],
+      ['pane@(400,400)', 400, 400],
+      ['pane@(1000,500)', 1000, 500],
+      ['pane@(700,300)', 700, 300],
+      ['pane@(1400,640)', 1400, 640],
+      ['pane@(300,900)', 300, 900],
+      ['pane@(800,450)', 800, 450],
+      ['pane@(1500,400)', 1500, 400],
+    ];
+    // green-dominant pixel scan — the palette is silver/blue, so any true green
+    // pixel is a regression (fuel cell and its ramp are gone). Report in design
+    // coords alongside the raw value.
+    let gCount = 0;
+    const gSpots = [];
+    for (let y = 0; y < H && gSpots.length < 25; y += 2) {
+      for (let x = 0; x < W; x += 2) {
+        const i = (y * W + x) * 4;
+        const rr = d[i], gg = d[i + 1], bb = d[i + 2];
+        if (gg > rr + 14 && gg > bb + 14 && gg > 60) {
+          gSpots.push(`${Math.round(x / S)},${Math.round(y / S)}:${rr},${gg},${bb}`);
+          if (++gCount > 500) break;
+        }
+      }
+      if (gCount > 500) break;
+    }
+    const gs = `GREEN=${gCount}` + (gSpots.length ? ' ' + gSpots.join(' ') : '');
+    // steering wheel: baked #141B34 strokes should now be visible in design
+    // x1309..1458, y219..368 (wheel centre ~1383,293, r≈74.5)
+    let wDark = 0;
+    for (let y = 219; y <= 368 && wDark < 400; y += 2) {
+      for (let x = 1309; x <= 1458 && wDark < 400; x += 2) {
+        const ww = px(x, y).split(',').map(Number);
+        if (ww[0] < 90 && ww[1] < 100 && ww[2] < 120) wDark++;
+      }
+    }
+    const ws = `WHEEL_DARK=${wDark}`;
+    // alien logo: baked #141B34 strokes should be visible in design
+    // x770..830, y50..106 (centre ~800, disc + antennae inside that box)
+    let logoDark = 0;
+    for (let y = 50; y <= 106 && logoDark < 300; y += 1) {
+      for (let x = 770; x <= 830 && logoDark < 300; x += 1) {
+        const ll = px(x, y).split(',').map(Number);
+        if (ll[0] < 120 && ll[1] < 130 && ll[2] < 150) logoDark++;
+      }
+    }
+    const ls = `LOGO_DARK=${logoDark}`;
+    head.textContent = probes
+      .map(([t, x, y]) => `${t}=${px(x, y)}`)
+      .join(' ') + ' || ' + gs + ' || ' + ws + ' || ' + ls;
+    document.body.appendChild(head);
+    document.title = 'gauge-ok';
+  </script>
+</body>
+</html>

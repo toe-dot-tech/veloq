@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#05070c" />
+    <meta name="theme-color" content="#e8eff5" />
     <title>Veloq — Racing HUD</title>
     <style>
       :root {
-        color-scheme: dark;
+        color-scheme: light;
       }
       * {
         margin: 0;
@@ -18,7 +18,7 @@
       body {
         width: 100%;
         height: 100%;
-        background: #05070c;
+        background: #e8eff5;
         overflow: hidden;
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
@@ -28,22 +28,26 @@
         width: 100%;
         height: 100%;
         display: block;
+        -webkit-font-smoothing: antialiased;
       }
       #stats {
         position: absolute;
         top: 12px;
         right: 12px;
         padding: 10px 12px;
-        background: rgba(6, 10, 18, 0.78);
-        border: 1px solid #1d2836;
-        border-radius: 8px;
-        color: #7fe7c4;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.10));
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 12px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        color: #3a3730;
         font-size: 12px;
         line-height: 1.55;
         white-space: pre;
         pointer-events: none;
         -webkit-user-select: none;
         user-select: none;
+        backdrop-filter: blur(3px) saturate(1.2);
+        -webkit-backdrop-filter: blur(3px) saturate(1.2);
       }
       #banner {
         position: absolute;
@@ -52,12 +56,14 @@
         transform: translateX(-50%);
         max-width: 90vw;
         padding: 10px 16px;
-        background: #3b1219;
-        border: 1px solid #ff3b4e;
+        background: rgba(184, 74, 46, 0.12);
+        border: 1px solid #b84a2e;
         border-radius: 8px;
-        color: #ffd7dc;
+        color: #8f3a24;
         font-size: 13px;
         text-align: center;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
       }
       #banner[hidden] {
         display: none;

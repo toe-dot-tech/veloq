@@ -139,13 +139,18 @@ function loop(now) {
     meta.ws = wsStatus;
     meta.packets = Atomics.load(headerI32, 1);
     meta.invalid = Atomics.load(headerI32, 2);
-    statsEl.textContent =
-      `fps      ${fps.toFixed(1).padStart(6)}  (${frameMsEma.toFixed(1)} ms)\n` +
-      `telemetry ${hz.toFixed(1).padStart(5)} Hz  gen ${gen}\n` +
-      `e2e      ${meta.e2e.toFixed(2).padStart(5)} ms  age ${meta.age.toFixed(2)} ms\n` +
-      `ws       ${wsStatus.padEnd(6)}  isolated ${crossOriginIsolated}\n` +
-      `packets  ${meta.packets}  invalid ${meta.invalid}\n` +
-      `sab      ${(SAB_SIZE / 1024).toFixed(1)} KiB  ring ${RING_SLOTS} slots`;
+    // three-line grid readout — 3 rows × 2 columns instead of a straight list
+    const left = [
+      `fps ${fps.toFixed(1)} (${frameMsEma.toFixed(1)}ms)`,
+      `e2e ${meta.e2e.toFixed(2)}ms age ${meta.age.toFixed(2)}ms`,
+      `packets ${meta.packets} invalid ${meta.invalid}`,
+    ];
+    const right = [
+      `telemetry ${hz.toFixed(1)}Hz gen ${gen}`,
+      `ws ${wsStatus} iso ${crossOriginIsolated}`,
+      `sab ${(SAB_SIZE / 1024).toFixed(1)}KiB ring ${RING_SLOTS}`,
+    ];
+    statsEl.textContent = left.map((l, i) => l.padEnd(30) + right[i]).join('\n');
   }
 
 }
